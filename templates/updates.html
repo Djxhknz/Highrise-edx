@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔄 مركز التحديثات - بوت Highrise EDX</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Cairo', sans-serif;
+            min-height: 100vh;
+        }
+        .card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            text-align: center;
+            font-weight: bold;
+        }
+        .btn-update {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            color: white;
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+        .btn-update:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(45deg, #dc3545, #e74c3c);
+        }
+        .update-item {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .update-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        .version-badge {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-new {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .status-installed {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-zone:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #764ba2;
+        }
+        .upload-zone.dragover {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #28a745;
+        }
+        .code-input {
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .progress-bar-custom {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+        .changelog {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
+        <div class="container">
+            <a class="navbar-brand text-white" href="/">
+                <i class="fas fa-robot"></i> بوت Highrise EDX
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link text-white" href="/">
+                    <i class="fas fa-home"></i> الرئيسية
+                </a>
+                <a class="nav-link text-white active" href="/updates">
+                    <i class="fas fa-download"></i> التحديثات
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="text-center text-white mb-4">
+            🔄 مركز التحديثات
+            <br><small class="text-light">نظام التحديث التلقائي لبوت Highrise</small>
+        </h1>
+
+        <!-- قسم رفع التحديثات للمطورين -->
+        <div class="row" id="developerSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-upload"></i> رفع تحديث جديد (للمطورين فقط)</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="uploadForm" enctype="multipart/form-data" onsubmit="uploadUpdate(event)">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">كود المطور</label>
+                                        <input type="password" class="form-control" id="developerCode" required>
+                                        <div class="form-text">أدخل كود المطور للسماح برفع التحديث</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">رقم النسخة</label>
+                                        <input type="text" class="form-control" id="version" placeholder="مثال: 3.1.0" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">عنوان التحديث</label>
+                                        <input type="text" class="form-control" id="title" placeholder="مثال: تحديث جديد" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">وصف التحديث</label>
+                                        <textarea class="form-control" id="description" rows="2" placeholder="وصف مختصر للتحديث"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">قائمة التغييرات</label>
+                                        <textarea class="form-control" id="changelog" rows="3" placeholder="- إضافة ميزة جديدة&#10;- إصلاح مشاكل&#10;- تحسينات"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ملف التحديث (ZIP)</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="updateFile" accept=".zip" required>
+                                    <span class="input-group-text">
+                                        <i class="fas fa-file-archive"></i>
+                                    </span>
+                                </div>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> 
+                                    يجب أن يكون الملف بصيغة ZIP ويحتوي على ملفات المشروع
+                                </div>
+                                <div id="selectedFileInfo" class="mt-2 p-2 bg-light rounded" style="display: none;">
+                                    <small class="text-muted">
+                                        <i class="fas fa-file"></i> 
+                                        <span id="selectedFileName"></span>
+                                        (<span id="selectedFileSize"></span>)
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- شريط التقدم للرفع -->
+                            <div class="progress mb-3" id="uploadProgress" style="display: none;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">
+                                    <span id="uploadProgressText">0%</span>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg" id="uploadBtn">
+                                    <i class="fas fa-upload"></i> رفع التحديث
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <!-- قسم رفع التحديثات المحلية -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-rocket"></i> تطبيق تحديث محلي</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">اختر ملف التحديث (ZIP)</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="localUpdateFile" accept=".zip" onchange="handleLocalUpdateFile(this)">
+                                <span class="input-group-text">
+                                    <i class="fas fa-file-archive"></i>
+                                </span>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i>
+                                اختر ملف ZIP من جهازك لتطبيق التحديث مباشرةً.
+                            </div>
+                            <div id="localFileInfo" class="mt-2 p-2 bg-light rounded" style="display: none;">
+                                <small class="text-muted">
+                                    <i class="fas fa-file"></i>
+                                    <span id="localFileName"></span>
+                                    (<span id="localFileSize"></span>)
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-update btn-lg" id="applyLocalUpdateBtn" onclick="applyLocalUpdate()" disabled>
+                                <i class="fas fa-rocket"></i> تطبيق التحديث المحلي
+                            </button>
+                        </div>
+
+                        <!-- شريط التقدم للتحديث المحلي -->
+                        <div class="progress mt-3" id="localUpdateProgress" style="display: none;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                <span id="progressText">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم التحديثات المتاحة - متاح للجميع -->
+        <div class="row" id="updatesSection"></div>
+
+        <!-- معلومات النظام -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-info-circle"></i> معلومات النظام</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>النسخة الحالية</h6>
+                                    <span class="version-badge" id="currentVersion">3.0.0</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>آخر تحديث</h6>
+                                    <small class="text-muted" id="lastUpdate">لم يتم التحديث بعد</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>حالة النظام</h6>
+                                    <span class="badge bg-success">يعمل بشكل طبيعي</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal للتأكيد -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">⚠️ تأكيد التحديث</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>هل أنت متأكد من تطبيق هذا التحديث؟</p>
+                    <div class="alert alert-info">
+                        <strong>ملاحظة:</strong> سيتم الاحتفاظ بجميع بياناتك الشخصية وإعداداتك
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-update" onclick="applyUpdate()">تطبيق التحديث</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Modal للتحقق من كود المطور -->
+    <div class="modal fade" id="codeVerificationModal" tabindex="-1" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">🔑 التحقق من كود المطور</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-lock fa-4x text-warning mb-3"></i>
+                    <h5>أدخل كود المطور لنشر التحديثات</h5>
+                    <p class="text-muted">يجب إدخال الكود الصحيح للمتابعة</p>
+
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <input type="password" class="form-control code-input" id="developerCodeInput"
+                                   placeholder="أدخل كود المطور..." maxlength="5">
+                            <button class="btn btn-update btn-lg mt-3 w-100" onclick="verifyDeveloperCode()">
+                                <i class="fas fa-unlock"></i> تحقق من الكود
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedUpdateId = null;
+        let isDeveloper = false;
+
+        // التحقق من كود المطور للنشر
+        function verifyDeveloperCode() {
+            const code = document.getElementById('developerCodeInput').value;
+
+            if (code === '01018') {
+                isDeveloper = true;
+                document.getElementById('developerSection').style.display = 'block';
+                document.getElementById('codeVerificationModal').style.display = 'none';
+                showToast('✅ تم التحقق من كود المطور بنجاح', 'success');
+            } else {
+                showToast('❌ كود المطور غير صحيح', 'error');
+            }
+        }
+
+        // عرض نافذة التحقق من كود المطور
+        function showDeveloperCodeModal() {
+            document.getElementById('codeVerificationModal').style.display = 'block';
+        }
+
+        // فحص التحديثات المتاحة
+        async function checkForUpdates() {
+            try {
+                const response = await fetch('/api/check-updates');
+                const data = await response.json();
+
+                if (data.success) {
+                    displayUpdates(data.updates);
+                    document.getElementById('updateCount').textContent = `${data.updates.length} تحديث متاح`;
+                } else {
+                    showToast('❌ خطأ في فحص التحديثات', 'error');
+                }
+            } catch (error) {
+                showToast('❌ خطأ في الاتصال بالخادم', 'error');
+            }
+        }
+
+        // عرض التحديثات
+        function displayUpdates(updates) {
+            const updatesList = document.getElementById('updatesList');
+            const noUpdates = document.getElementById('noUpdates');
+
+            if (updates.length === 0) {
+                updatesList.innerHTML = '';
+                noUpdates.style.display = 'block';
+                return;
+            }
+
+            noUpdates.style.display = 'none';
+
+            updatesList.innerHTML = updates.map(update => `
+                <div class="update-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5>
+                                ${update.title}
+                                <span class="version-badge ms-2">v${update.version}</span>
+                                <span class="status-new ms-2">جديد</span>
+                            </h5>
+                            <p class="text-muted">${update.description}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> ${new Date(update.release_date).toLocaleDateString('ar-EG')}
+                                <i class="fas fa-download ms-3"></i> ${update.size}
+                            </small>
+
+                            ${update.changelog ? `
+                                <div class="changelog">
+                                    <h6>📋 قائمة التغييرات:</h6>
+                                    <pre>${update.changelog}</pre>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="text-end">
+                            <button class="btn btn-update" onclick="confirmUpdate('${update.id}')">
+                                <i class="fas fa-download"></i> تحديث
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // تأكيد التحديث
+        function confirmUpdate(updateId) {
+            selectedUpdateId = updateId;
+            new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        }
+
+        // تطبيق التحديث
+        async function applyUpdate() {
+            if (!selectedUpdateId) return;
+
+            try {
+                const response = await fetch('/api/apply-update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        update_id: selectedUpdateId,
+                        developer_code: isDeveloper ? '01018' : ''
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ تم تطبيق التحديث بنجاح', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                    checkForUpdates();
+
+                    // إعادة تشغيل البوت
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    showToast(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showToast('❌ خطأ في تطبيق التحديث', 'error');
+            }
+        }
+
+        // رفع تحديث جديد (للمطورين)
+        function handleUpdateFile(input) {
+             if (!isDeveloper) {
+                showDeveloperCodeModal();
+                return;
+            }
+            const file = input.files[0];
+            if (file && file.type === 'application/zip') {
+                showToast(`📁 تم اختيار الملف: ${file.name}`, 'info');
+            }
+        }
+
+        // رفع التحديث
+        async function uploadUpdate(event) {
+            event.preventDefault();
+
+             if (!isDeveloper) {
+                showDeveloperCodeModal();
+                return;
+            }
+
+            const fileInput = document.getElementById('updateFile');
+            const version = document.getElementById('version').value;
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+
+            if (!fileInput.files[0] || !version || !title) {
+                showToast('❌ يرجى ملء جميع الحقول المطلوبة', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('update_file', fileInput.files[0]);
+            formData.append('version', version);
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('developer_code', '01018');
+
+            const progressBar = document.getElementById('uploadProgress');
+            const uploadProgressText = document.getElementById('uploadProgressText');
+            const uploadBtn = document.getElementById('uploadBtn');
+
+            progressBar.style.display = 'block';
+            uploadProgressText.innerText = '0%';
+
+            try {
+                const response = await fetch('/api/upload-update', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ تم رفع التحديث بنجاح', 'success');
+                    // مسح النموذج
+                    fileInput.value = '';
+                    document.getElementById('version').value = '';
+                    document.getElementById('title').value = '';
+                    document.getElementById('description').value = '';
+                } else {
+                    showToast(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showToast('❌ خطأ في رفع التحديث', 'error');
+            } finally {
+                progressBar.style.display = 'none';
+                uploadProgressText.innerText = '0%';
+            }
+        }
+
+        // إظهار الرسائل
+        function showToast(message, type) {
+            // إنشاء toast بسيط
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            toast.innerHTML = message;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+
+        // Drag and Drop للملفات
+        const uploadZone = document.querySelector('.upload-zone');
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type === 'application/zip') {
+                document.getElementById('updateFile').files = files;
+                handleUpdateFile(document.getElementById('updateFile'));
+            }
+        });
+
+        // تحديث الوقت
+        function updateLastUpdateTime() {
+            const now = new Date().toLocaleString('ar-EG');
+            document.getElementById('lastUpdate').textContent = now;
+        }
+
+        // معالجة اختيار ملف التحديث المحلي
+        function handleLocalUpdateFile(input) {
+            const file = input.files[0];
+            const fileInfo = document.getElementById('localFileInfo');
+            const fileName = document.getElementById('localFileName');
+            const fileSize = document.getElementById('localFileSize');
+            const applyBtn = document.getElementById('applyLocalUpdateBtn');
+
+            if (file) {
+                if (!file.name.toLowerCase().endsWith('.zip')) {
+                    showToast('❌ يجب أن يكون الملف بصيغة ZIP', 'error');
+                    input.value = '';
+                    return;
+                }
+
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.style.display = 'block';
+                applyBtn.disabled = false;
+
+                showToast(`📁 تم اختيار الملف: ${file.name}`, 'info');
+            } else {
+                fileInfo.style.display = 'none';
+                applyBtn.disabled = true;
+            }
+        }
+
+        // تطبيق التحديث المحلي
+        async function applyLocalUpdate() {
+            const fileInput = document.getElementById('localUpdateFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showToast('❌ يرجى اختيار ملف أولاً', 'error');
+                return;
+            }
+
+            const progressDiv = document.getElementById('localUpdateProgress');
+            const progressBar = progressDiv.querySelector('.progress-bar');
+            const progressText = document.getElementById('progressText');
+            const applyBtn = document.getElementById('applyLocalUpdateBtn');
+
+            try {
+                // إظهار شريط التقدم
+                progressDiv.style.display = 'block';
+                applyBtn.disabled = true;
+                applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التطبيق...';
+
+                // تحديث شريط التقدم
+                updateProgress(20, 'رفع الملف...');
+
+                // إنشاء FormData لرفع الملف
+                const formData = new FormData();
+                formData.append('update_file', file);
+                formData.append('apply_directly', 'true'); // علامة للتطبيق المباشر
+
+                updateProgress(40, 'معالجة الملف...');
+
+                const response = await fetch('/api/apply-local-update', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                updateProgress(70, 'تطبيق التحديث...');
+
+                const data = await response.json();
+
+                if (data.success) {
+                    updateProgress(100, 'تم التطبيق بنجاح!');
+                    showToast('✅ تم تطبيق التحديث المحلي بنجاح', 'success');
+
+                    // إخفاء شريط التقدم بعد فترة
+                    setTimeout(() => {
+                        progressDiv.style.display = 'none';
+                        applyBtn.innerHTML = '<i class="fas fa-rocket"></i> تطبيق التحديث المحلي';
+                        applyBtn.disabled = false;
+
+                        // مسح اختيار الملف
+                        fileInput.value = '';
+                        document.getElementById('localFileInfo').style.display = 'none';
+                        applyBtn.disabled = true;
+
+                        // إعادة تشغيل البوت
+                        showToast('🔄 سيتم إعادة تشغيل البوت خلال 3 ثوانِ...', 'info');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    }, 2000);
+                } else {
+                    updateProgress(0, 'فشل التطبيق');
+                    showToast(`❌ فشل في تطبيق التحديث: ${data.error}`, 'error');
+                    progressDiv.style.display = 'none';
+                    applyBtn.innerHTML = '<i class="fas fa-rocket"></i> تطبيق التحديث المحلي';
+                    applyBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('خطأ في تطبيق التحديث المحلي:', error);
+                updateProgress(0, 'خطأ في الاتصال');
+                showToast('❌ خطأ في الاتصال بالخادم', 'error');
+                progressDiv.style.display = 'none';
+                applyBtn.innerHTML = '<i class="fas fa-rocket"></i> تطبيق التحديث المحلي';
+                applyBtn.disabled = false;
+            }
+        }
+
+        // تحديث شريط التقدم
+        function updateProgress(percentage, text) {
+            const progressBar = document.querySelector('#localUpdateProgress .progress-bar');
+            const progressText = document.getElementById('progressText');
+
+            if (progressBar && progressText) {
+                progressBar.style.width = percentage + '%';
+                progressText.textContent = text || percentage + '%';
+
+                // تغيير لون الشريط حسب التقدم
+                if (percentage >= 100) {
+                    progressBar.className = 'progress-bar bg-success';
+                } else if (percentage >= 70) {
+                    progressBar.className = 'progress-bar bg-info';
+                } else {
+                    progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated';
+                }
+            }
+        }
+
+        // تنسيق حجم الملف
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 بايت';
+
+            const k = 1024;
+            const sizes = ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // تشغيل جميع الوظائف عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLastUpdateTime();
+            checkForUpdates();
+        });
+    </script>
+</body>
+</html>
