@@ -1,0 +1,28 @@
+
+# ملفات Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ملفات البيانات الحساسة
+data/users_data.json
+data/people.json
+chat_logs/
+backups/
+
+# ملفات مؤقتة
+temp_*.txt
+*.tmp
+
+# ملفات النظام
+.DS_Store
+Thumbs.db
+
+# بيئة التطوير
+.env
+.venv
+venv/
+
+# ملفات Replit المحلية
+.replit.nix
